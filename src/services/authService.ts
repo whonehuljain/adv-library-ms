@@ -3,7 +3,10 @@ import prisma from '../config/prismaClient';
 import { generateToken, verifyToken } from '../config/jwt';
 import { CustomError } from '../middlewares/errorHandler';
 
+import { EmailService } from './emailService';
+
 export class AuthService {
+
 
   async register(data: {
     email: string;
@@ -33,7 +36,7 @@ export class AuthService {
 
 
     //send mail
-    await this.sendVerificationEmail(user.email, verificationToken);
+    await this.sendVerificationEmail(user.email, verificationToken, user.name);
 
     return {
       id: user.id,
@@ -87,8 +90,16 @@ export class AuthService {
         data: { is_verified: true }
       });
 
+
+      
+      await this.emailService.sendEmail(
+        user.email,
+        'Welcome to Our Library!',
+        this.emailService.getWelcomeEmailTemplate(user.name)
+      );
+
       return {
-        message: 'Email verified successfully!',
+        message: 'Email verified successfully',
         user: {
           id: user.id,
           email: user.email,
@@ -96,15 +107,32 @@ export class AuthService {
         }
       };
     } catch (error) {
-      throw new CustomError('Invalid');
+      throw new CustomError('Invalid or expired verification token');
     }
   }
 
-  private async sendVerificationEmail(email: string, token: string) {
 
-    const verificationLink = `http://localhost:${process.env.PORT}/auth/verify/${token}`;
+  private emailService: EmailService;
 
-    //send mail login.. will do later
-    console.log('Verification link:', verificationLink);
+  constructor() {
+    this.emailService = EmailService.getInstance();
+  }
+
+  private async sendVerificationEmail(email: string, token: string, name: string) {
+
+    const verificationLink = `${process.env.APP_URL || 'http://localhost:' + process.env.PORT}/auth/verify/${token}`;
+
+
+    try {
+      await this.emailService.sendEmail(
+        email,
+        'Verify Your Email Address',
+        this.emailService.getVerificationEmailTemplate(name, verificationLink)
+      );
+    } catch (error) {
+
+      console.error('Failed to send verification email:', error);
+
+    }
   }
 }
