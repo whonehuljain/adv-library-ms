@@ -1,0 +1,132 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email          String         @unique @db.VarChar(255)
+  password       String         @db.VarChar(255)
+  name           String         @db.VarChar(255)
+  role           user_role?     @default(MEMBER)
+  is_verified    Boolean?       @default(false)
+  is_active      Boolean?       @default(true)
+  verification_token String?       @db.VarChar(255)
+  created_at     DateTime?      @default(now()) @db.Timestamptz(6)
+  updated_at     DateTime?      @default(now()) @db.Timestamptz(6)
+  deleted_at     DateTime?      @db.Timestamptz(6)
+  borrowed_books BorrowedBook[]
+  transactions   Transaction[]
+
+  @@index([email], map: "idx_users_email")
+  @@map("users")
+}
+
+model Book {
+  id               String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  isbn             String              @unique @db.VarChar(13)
+  title            String              @db.VarChar(255)
+  copies           Int?                @default(1)
+  created_at       DateTime?           @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime?           @default(now()) @db.Timestamptz(6)
+  deleted_at       DateTime?           @db.Timestamptz(6)
+  authors_books    AuthorsOnBooks[]
+  borrowed_books   BorrowedBook[]
+  categories_books CategoriesOnBooks[]
+
+  @@index([isbn], map: "idx_books_isbn")
+  @@map("books")
+}
+
+model Author {
+  id            String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name          String           @db.VarChar(255)
+  created_at    DateTime?        @default(now()) @db.Timestamptz(6)
+  updated_at    DateTime?        @default(now()) @db.Timestamptz(6)
+  authors_books AuthorsOnBooks[]
+
+  @@map("authors")
+}
+
+model Category {
+  id               String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name             String              @unique @db.VarChar(255)
+  created_at       DateTime?           @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime?           @default(now()) @db.Timestamptz(6)
+  categories_books CategoriesOnBooks[]
+
+  @@map("categories")
+}
+
+model BorrowedBook {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id     String    @db.Uuid
+  book_id     String    @db.Uuid
+  borrow_date DateTime? @default(now()) @db.Timestamptz(6)
+  due_date    DateTime  @db.Timestamptz(6)
+  return_date DateTime? @db.Timestamptz(6)
+  created_at  DateTime? @default(now()) @db.Timestamptz(6)
+  books       Book      @relation(fields: [book_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users       User      @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([book_id], map: "idx_borrowed_books_book")
+  @@index([user_id], map: "idx_borrowed_books_user")
+  @@map("borrowed_books")
+}
+
+model Transaction {
+  id         String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id    String             @db.Uuid
+  amount     Decimal            @db.Decimal(10, 2)
+  status     transaction_status
+  type       transaction_type
+  created_at DateTime?          @default(now()) @db.Timestamptz(6)
+  users      User               @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_user")
+
+  @@index([user_id], map: "idx_transactions_user")
+  @@map("transactions")
+}
+
+model AuthorsOnBooks {
+  book_id   String @db.Uuid
+  author_id String @db.Uuid
+  authors   Author @relation(fields: [author_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_author")
+  books     Book   @relation(fields: [book_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_book")
+
+  @@id([book_id, author_id])
+  @@index([author_id], map: "idx_authors_books_author")
+  @@index([book_id], map: "idx_authors_books_book")
+  @@map("authors_books")
+}
+
+model CategoriesOnBooks {
+  book_id     String   @db.Uuid
+  category_id String   @db.Uuid
+  books       Book     @relation(fields: [book_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_book")
+  categories  Category @relation(fields: [category_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_category")
+
+  @@id([book_id, category_id])
+  @@index([book_id], map: "idx_categories_books_book")
+  @@index([category_id], map: "idx_categories_books_category")
+  @@map("categories_books")
+}
+
+enum transaction_status {
+  PENDING
+  COMPLETED
+  FAILED
+}
+
+enum transaction_type {
+  FINE
+  PAYMENT
+}
+
+enum user_role {
+  ADMIN
+  MEMBER
+}
