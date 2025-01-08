@@ -15,6 +15,8 @@ export const authenticate = (req: AuthRequest, res: Response, next: NextFunction
       throw new CustomError('Authentication required');
     }
 
+    console.log('token found, verifying...');
+
     const decoded = verifyToken(token);
     req.user = decoded;
     next();
