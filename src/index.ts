@@ -1,7 +1,6 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-// import { auth as authRoutes } from './routes/auth';
 import routes from './routes/router';
 import prisma from './config/prismaClient';
 import { errorHandler } from './middlewares/errorHandler';
