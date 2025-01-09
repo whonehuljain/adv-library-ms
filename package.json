@@ -3,13 +3,14 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-  "scripts": {
-    "start": "nodemon src/index.ts",
-    "dev": "ts-node-dev --respawn src/index.ts",
-    "build": "tsc",
-    "prisma:generate": "prisma generate",
-    "prisma:migrate": "prisma migrate dev"
-  },
+"scripts": {
+  "start": "node dist/index.js",
+  "dev": "ts-node-dev --respawn src/index.ts",
+  "build": "tsc",
+  "prisma:generate": "prisma generate",
+  "prisma:migrate": "prisma migrate dev"
+}
+,
   "keywords": [],
   "author": "",
   "license": "ISC",
