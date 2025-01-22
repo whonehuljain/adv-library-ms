@@ -1,0 +1,41 @@
+version: "3"
+services:
+  app: 
+    build: .
+    ports:
+      - "${PORT}:${PORT}"
+    env_file:
+      - .env
+    depends_on:
+      - pgdb
+    volumes:
+      - ./src:/app/src
+      - ./prisma:/app/prisma
+      - ./.env:/app/.env
+    networks:
+      - lib-m
+    command: sh -c "npx prisma migrate deploy && npm run start"
+
+
+  pgdb:
+    image: postgres:15
+    ports:
+      - "5431:5432"
+    env_file:
+      - .env
+    environment:
+      - POSTGRES_USER=${DATABASE_USER}
+      - POSTGRES_PASSWORD=${DATABASE_PASSWORD}
+      - POSTGRES_DB=${DATABASE_NAME} 
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - lib-m
+
+volumes:
+  postgres_data:
+
+networks:
+  lib-m:
+    driver: bridge
