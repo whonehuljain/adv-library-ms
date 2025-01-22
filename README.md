@@ -1,6 +1,28 @@
 # Adv. Library management system
 
-Steps to set up locally:
+Setup from docker:
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/whonehuljain/adv-library-ms.git
+cd adv-library-ms
+```
+
+### 2. Create a .env file similar to .env.example file
+
+### 3. Make sure docker engine is installed on you machine and is up and running
+
+### 4. Run the docker compose command:
+
+```bash
+docker-compose up --build -d
+```
+
+The docker image will start and be running and the app will be running on localhost on specified port
+
+
+Steps to set up locally from files:
 
 ### 1. Clone the Repository
 
